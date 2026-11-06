@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=IM+Fell+English:ital@0;1&display=swap">
+<style>
+/* Layout: a leaning pile of four spines on a wooden shelf. Tapping one swings its cover open onto a paper contents page; entries open in a full-screen reader. */
+:root {
+  --night: #17110d;
+  --wood: #2a1b11;
+  --wood-hi: #4a3020;
+  --brass: #c9a24d;
+  --brass-dim: #8f7231;
+  --vellum: #e9ddc3;
+  --vellum-deep: #cdb98f;
+  --ink: #2a1c10;
+  --ink-soft: #66513b;
+  --oxblood: #7a2e2e;
+  --moss: #2f4b42;
+  --indigo: #2f3358;
+  --tan: #84643d;
+  --navh: 70px;
+  --f-display: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  --f-body: 'IM Fell English', Georgia, 'Times New Roman', serif;
+  color-scheme: dark;
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: var(--night) radial-gradient(ellipse 90% 50% at 50% -8%, rgba(201,162,77,.16), transparent 70%) no-repeat;
+  color: var(--vellum);
+  font-family: var(--f-body);
+  font-size: 18px;
+  line-height: 1.5;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+/* ---------- shelf ---------- */
+.shelf-view { max-width: 560px; margin: 0 auto; padding-block: 32px 48px; }
+.eyebrow { font-family: var(--f-display); font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: var(--brass-dim); margin: 0 0 6px; }
+h1.title { font-family: var(--f-display); font-weight: 600; font-size: 38px; line-height: 1.1; letter-spacing: .06em; margin: 0; color: var(--brass); text-wrap: balance; }
+.lede { margin: 10px 0 24px; color: #cdbf9f; max-width: 34ch; }
+.case {
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg, #2f2015, #221510);
+  border: 2px solid var(--wood-hi);
+  border-bottom: 0;
+  padding: 26px 14px 0;
+  box-shadow: inset 0 14px 34px rgba(0,0,0,.65);
+}
+.pile { display: flex; flex-direction: column; gap: 3px; }
+.spine {
+  --c: var(--moss); --h: 84px; --l: 0px; --r: 0px; --tilt: 0deg; --shift: 0px;
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  height: var(--h);
+  margin-inline: var(--l) var(--r);
+  text-decoration: none;
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0) 22%, rgba(0,0,0,0) 62%, rgba(0,0,0,.4)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, rgba(0,0,0,.035) 1px 3px),
+    var(--c);
+  border-top: 3px solid rgba(0,0,0,.5);
+  border-bottom: 3px solid rgba(0,0,0,.55);
+  border-radius: 2px;
+  box-shadow: 0 2px 0 rgba(0,0,0,.4), 0 6px 12px rgba(0,0,0,.35);
+  transform: translateX(var(--shift)) rotate(var(--tilt));
+  transition: transform .18s ease;
+  touch-action: manipulation;
+}
+.spine::before, .spine::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 12px;
+  background: linear-gradient(90deg, var(--brass) 0 3px, transparent 3px 6px, var(--brass) 6px 9px, transparent 9px);
+  opacity: .8;
+}
+.spine::before { left: 16px; }
+.spine::after { right: 16px; transform: scaleX(-1); }
+.spine:active, .spine.pulled { --shift: 14px; }
+.spine .t { font-family: var(--f-display); font-weight: 600; font-size: 19px; letter-spacing: .16em; text-transform: uppercase; color: var(--brass); text-shadow: 0 1px 2px rgba(0,0,0,.7); padding-inline: 40px; }
+.spine .n { font-size: 13px; font-style: italic; color: rgba(233,221,195,.78); }
+.board { height: 24px; margin-inline: -16px; background: linear-gradient(180deg, #6a4729, #3a2515); border-top: 2px solid #7d5733; box-shadow: 0 10px 20px rgba(0,0,0,.55); }
+.foot { margin: 20px 0 0; font-size: 15px; font-style: italic; color: #a39478; }
+
+/* ---------- open book ---------- */
+.book { position: fixed; inset: 0; z-index: 20; perspective: 1800px; perspective-origin: 15% 50%; visibility: hidden; transition: visibility 0s linear 1s; }
+.book.open { visibility: visible; transition-delay: 0s; }
+.page {
+  position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(150,110,50,.10), transparent 30%),
+    radial-gradient(circle at 12% 70%, rgba(150,110,50,.08), transparent 34%),
+    var(--vellum);
+  color: var(--ink);
+  box-shadow: inset 22px 0 26px -18px rgba(0,0,0,.4);
+}
+/* ---------- bottom nav (Shelf on the left, Back on the right) ---------- */
+.nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: linear-gradient(180deg, #34231a, #20150e); border-top: 2px solid var(--brass-dim); box-shadow: 0 -8px 20px rgba(0,0,0,.45); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.nav[hidden], .nav button[hidden] { display: none; }
+.nav button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 112px; min-height: 48px; padding: 0 18px; background: rgba(0,0,0,.25); border: 1px solid var(--brass-dim); border-radius: 2px; color: var(--brass); cursor: pointer; font-family: var(--f-display); font-size: 13px; letter-spacing: .16em; text-transform: uppercase; touch-action: manipulation; }
+.nav button:active { background: rgba(201,162,77,.18); }
+.nav #navBack { margin-left: auto; }
+.pg { max-width: 620px; margin: 0 auto; padding: calc(26px + env(safe-area-inset-top, 0px)) max(18px, env(safe-area-inset-right, 0px)) calc(var(--navh) + 28px + env(safe-area-inset-bottom, 0px)) max(22px, env(safe-area-inset-left, 0px)); }
+.pg h2 { font-family: var(--f-display); font-weight: 600; font-size: 32px; line-height: 1.15; letter-spacing: .05em; margin: 4px 0 8px; text-wrap: balance; }
+.blurb { margin: 0 0 18px; color: var(--ink-soft); font-style: italic; }
+.rule { height: 7px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); opacity: .55; margin-bottom: 6px; }
+.rows { display: flex; flex-direction: column; }
+.row {
+  display: grid; grid-template-columns: 56px minmax(0, 1fr) 14px; gap: 14px; align-items: center;
+  min-height: 80px; padding: 11px 2px; text-decoration: none; color: var(--ink);
+  border-bottom: 1px solid rgba(42,28,16,.25);
+}
+.row:active { background: rgba(42,28,16,.07); }
+.thumb { width: 56px; height: 56px; border: 1px solid rgba(42,28,16,.55); background: var(--vellum-deep); object-fit: cover; display: grid; place-items: center; color: var(--ink-soft); }
+.row .tag { font-family: var(--f-display); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--oxblood); }
+.row .name { font-size: 21px; line-height: 1.2; overflow-wrap: anywhere; }
+.row .date { font-size: 14px; font-style: italic; color: var(--ink-soft); }
+.empty { padding: 24px 2px; font-style: italic; color: var(--ink-soft); }
+
+.cover { position: absolute; inset: 0; transform-origin: left center; transform-style: preserve-3d; transform: rotateY(0deg); transition: transform .95s cubic-bezier(.55,.05,.25,1); pointer-events: none; }
+.book.open .cover { transform: rotateY(-172deg); }
+.face { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.front {
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.5) 0, rgba(0,0,0,0) 26px, rgba(0,0,0,0) calc(100% - 8px), rgba(255,255,255,.1)),
+    repeating-linear-gradient(45deg, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,.03) 2px 4px),
+    var(--c, var(--moss));
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; padding: 48px 40px;
+}
+.front::before { content: ""; position: absolute; inset: calc(22px + env(safe-area-inset-top, 0px)) 22px calc(22px + env(safe-area-inset-bottom, 0px)) 30px; border: 2px solid var(--brass); opacity: .75; }
+.front::after { content: ""; position: absolute; inset: calc(29px + env(safe-area-inset-top, 0px)) 29px calc(29px + env(safe-area-inset-bottom, 0px)) 37px; border: 1px solid var(--brass); opacity: .4; }
+.front .e { font-family: var(--f-display); font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: var(--brass); opacity: .85; }
+.front .h { font-family: var(--f-display); font-weight: 600; font-size: 40px; letter-spacing: .12em; text-transform: uppercase; color: var(--brass); text-shadow: 0 2px 3px rgba(0,0,0,.6); text-wrap: balance; overflow-wrap: anywhere; }
+.front .o { width: 96px; height: 7px; border-top: 1px solid var(--brass); border-bottom: 1px solid var(--brass); opacity: .8; }
+.front .c { font-style: italic; color: rgba(233,221,195,.8); }
+.inside {
+  transform: rotateY(180deg);
+  background:
+    repeating-linear-gradient(45deg, rgba(110,80,40,.22) 0 1px, transparent 1px 11px),
+    repeating-linear-gradient(-45deg, rgba(110,80,40,.22) 0 1px, transparent 1px 11px),
+    #d8c79f;
+  box-shadow: inset -24px 0 30px -18px rgba(0,0,0,.45);
+}
+
+/* ---------- reader ---------- */
+.reader { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; padding-bottom: calc(var(--navh) + env(safe-area-inset-bottom, 0px)); background: var(--night); visibility: hidden; opacity: 0; transform: translateY(26px); transition: transform .35s ease, opacity .3s ease, visibility 0s linear .35s; }
+.reader.open { visibility: visible; opacity: 1; transform: none; transition-delay: 0s; }
+.rbar { display: flex; align-items: center; gap: 12px; background: #120c08; border-bottom: 1px solid rgba(201,162,77,.3); padding: calc(8px + env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px)); }
+.rtitle { font-family: var(--f-display); font-size: 15px; letter-spacing: .08em; color: var(--brass); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.viewer { position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; background: #0e0a07; }
+.viewer img { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; will-change: transform; -webkit-user-drag: none; pointer-events: none; opacity: 0; transition: opacity .25s ease; }
+.viewer.ready img { opacity: 1; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; font-style: italic; color: #a39478; pointer-events: none; }
+.viewer.ready .loading { display: none; }
+.zoom { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); bottom: 14px; display: flex; flex-direction: column; gap: 8px; }
+.zoom button { width: 46px; height: 46px; background: rgba(18,12,8,.88); border: 1px solid var(--brass-dim); color: var(--brass); font-family: var(--f-display); font-size: 20px; line-height: 1; cursor: pointer; border-radius: 2px; }
+.zoom button.fitb { font-size: 11px; letter-spacing: .08em; }
+.hint { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); bottom: 14px; max-width: calc(100% - 92px); background: rgba(18,12,8,.88); border: 1px solid rgba(201,162,77,.35); padding: 8px 12px; font-size: 15px; font-style: italic; color: #d8c9a6; transition: opacity .6s ease; pointer-events: none; }
+.hint.gone { opacity: 0; }
+.rtext { flex: 1; min-height: 0; overflow-y: auto; background: var(--vellum); color: var(--ink); padding: 28px max(22px, env(safe-area-inset-right, 0px)) 40px max(22px, env(safe-area-inset-left, 0px)); }
+.rtext-in { max-width: 36rem; margin: 0 auto; }
+.rtext h2 { font-family: var(--f-display); font-weight: 600; font-size: 30px; line-height: 1.15; letter-spacing: .05em; margin: 6px 0 14px; text-wrap: balance; }
+.rtext p { font-size: 20px; line-height: 1.6; margin: 0 0 1em; }
+.rtext .tag { font-family: var(--f-display); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--oxblood); }
+.reader.is-image .rtext, .reader.is-text .viewer { display: none; }
+
+@media (min-width: 700px) {
+  .spine .t { font-size: 22px; }
+  h1.title { font-size: 46px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .book, .book.open { transition-duration: .01s; }
+  .cover { transition: opacity .25s ease; }
+  .book.open .cover { transform: none; opacity: 0; }
+  .reader { transform: none; }
+  .spine { transition: none; }
+}
+.noanim, .noanim * { transition: none !important; }
+</style>
+
+</head>
+<body>
+<main class="shelf-view" id="shelfView">
+  <p class="eyebrow">Planescape campaign</p>
+  <h1 class="title">The Library</h1>
+  <p class="lede">Maps, newsletters, lore, and handouts. Tap a book to open it.</p>
+  <div class="case">
+    <nav class="pile" id="pile" aria-label="Books"></nav>
+    <div class="board"></div>
+  </div>
+  <p class="foot">New books go on the shelf as the party finds them.</p>
+</main>
+
+<section class="book" id="book" role="dialog" aria-modal="true" aria-label="Open book" inert>
+  <div class="page" id="page">
+    <div class="pg">
+      <h2 id="bTitle"></h2>
+      <p class="blurb" id="bBlurb"></p>
+      <div class="rule"></div>
+      <nav class="rows" id="rows" aria-label="Entries"></nav>
+    </div>
+  </div>
+  <div class="cover" id="cover" aria-hidden="true">
+    <div class="face front">
+      <div class="e">The Library</div>
+      <div class="h" id="cTitle"></div>
+      <div class="o"></div>
+      <div class="c" id="cCount"></div>
+    </div>
+    <div class="face inside"></div>
+  </div>
+</section>
+
+<section class="reader" id="reader" role="dialog" aria-modal="true" aria-label="Entry" inert>
+  <div class="rbar">
+    <div class="rtitle" id="rTitle"></div>
+  </div>
+  <div class="viewer" id="viewer">
+    <img id="vimg" alt="" draggable="false">
+    <div class="loading">Unrolling the map&hellip;</div>
+    <div class="hint" id="hint"></div>
+    <div class="zoom">
+      <button type="button" id="zIn" aria-label="Zoom in">+</button>
+      <button type="button" id="zOut" aria-label="Zoom out">&minus;</button>
+      <button type="button" id="zFit" class="fitb" aria-label="Fit to screen">Fit</button>
+    </div>
+  </div>
+  <div class="rtext" id="rtext"><div class="rtext-in" id="rtextIn"></div></div>
+</section>
+
+<nav class="nav" id="nav" aria-label="Library navigation" hidden>
+  <button type="button" id="navShelf"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20h16M6 20V8h4v12M10 20V4h4v16M14 20V9l4 1v10"/></svg> Shelf</button>
+  <button type="button" id="navBack"><span aria-hidden="true">&lsaquo;</span> Back</button>
+</nav>
+
+<script>
+/* ============ CONTENT: edit this list to add books and entries ============
+   revealed: false hides an entry until you flip it to true (or delete the flag).
+   kind 'image' opens a pinch-zoom viewer (give w and h in pixels); kind 'text' opens a page. */
+const BOOKS = [
+  { id: 'maps', title: 'Maps', color: 'var(--moss)', unit: ['map', 'maps'],
+    blurb: 'Charts of Sigil and the places the party has been.',
+    entries: [
+      { id: 'sigil-map', title: 'Sigil, City of Doors', tag: 'City', date: 'Nov 1, 2026', kind: 'image',
+        src: 'sigil.jpg', thumb: 'thumb-sigil.jpg', w: 4200, h: 716,
+        alt: 'Wide illustrated panorama map of Sigil, the City of Doors, with landmarks along its length.',
+        hint: 'Pinch to zoom, drag to pan. Turn your phone sideways to see more at once.' }
+    ] },
+  { id: 'sigis', title: 'S.I.G.I.S.', color: 'var(--oxblood)', unit: ['issue', 'issues'],
+    blurb: 'Back issues of the city newsletter.',
+    entries: [
+      { id: 'sigis-example', title: 'Example issue', tag: 'Placeholder', date: 'Nov 1, 2026', kind: 'text',
+        body: ['This is an example entry. Replace it with a real issue of S.I.G.I.S. in the content list at the top of this page’s script.'] }
+    ] },
+  { id: 'lore', title: 'Lore', color: 'var(--indigo)', unit: ['entry', 'entries'],
+    blurb: 'What the party has learned about the planes and the people in them.',
+    entries: [
+      { id: 'lore-example', title: 'Example lore entry', tag: 'Placeholder', date: 'Nov 1, 2026', kind: 'text',
+        body: ['This is an example entry. Write the lore here, one string per paragraph.', 'Entries marked revealed: false stay off the shelf until you are ready for the party to read them.'] },
+      { id: 'lore-hidden', title: 'Hidden example', tag: 'Placeholder', date: 'Nov 1, 2026', kind: 'text', revealed: false,
+        body: ['You will not see this one until its revealed flag changes.'] }
+    ] },
+  { id: 'papers', title: 'Papers', color: 'var(--tan)', unit: ['handout', 'handouts'],
+    blurb: 'Letters, notes, and other things picked up along the way.',
+    entries: [
+      { id: 'papers-example', title: 'Example handout', tag: 'Placeholder', date: 'Nov 1, 2026', kind: 'text',
+        body: ['This is an example entry. Use a text entry for a letter or note, or an image entry for a scanned handout.'] }
+    ] }
+];
+
+/* ============ SHELF ============ */
+const $ = (s) => document.querySelector(s);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const live = (b) => b.entries.filter((e) => e.revealed !== false);
+const countText = (b) => { const n = live(b).length; return n + ' ' + (n === 1 ? b.unit[0] : b.unit[1]); };
+const bookEl = $('#book'), readerEl = $('#reader');
+let curBook = null, curEntry = null;
+
+const look = [
+  { h: 86, l: 0, r: 12, t: -0.3 }, { h: 78, l: 10, r: 0, t: 0.25 },
+  { h: 92, l: 3, r: 7, t: -0.15 }, { h: 82, l: 12, r: 2, t: 0.3 }
+];
+const pile = $('#pile');
+BOOKS.forEach((b, i) => {
+  const a = document.createElement('a');
+  const k = look[i % look.length];
+  a.className = 'spine'; a.href = '#' + b.id;
+  a.setAttribute('aria-label', b.title + ', ' + countText(b));
+  a.style.setProperty('--c', b.color);
+  a.style.setProperty('--h', k.h + 'px'); a.style.setProperty('--l', k.l + 'px');
+  a.style.setProperty('--r', k.r + 'px'); a.style.setProperty('--tilt', k.t + 'deg');
+  a.innerHTML = '<span class="t"></span><span class="n"></span>';
+  a.firstChild.textContent = b.title; a.lastChild.textContent = countText(b);
+  a.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    a.classList.add('pulled');
+    setTimeout(() => { a.classList.remove('pulled'); location.hash = b.id; }, reduce ? 0 : 170);
+  });
+  pile.appendChild(a);
+});
+
+/* ============ BOOK ============ */
+const DOC = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 11h7M9 14h7M9 17h5"/></svg>';
+const CHEV = '<svg width="12" height="18" viewBox="0 0 12 18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 2l7 7-7 7"/></svg>';
+
+function fillBook(b) {
+  $('#bTitle').textContent = b.title;
+  $('#bBlurb').textContent = b.blurb;
+  $('#cTitle').textContent = b.title;
+  $('#cCount').textContent = countText(b);
+  bookEl.style.setProperty('--c', b.color);
+  const rows = $('#rows'); rows.textContent = '';
+  const items = live(b);
+  if (!items.length) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = 'Nothing is shelved here yet.'; rows.appendChild(p); }
+  items.forEach((e) => {
+    const a = document.createElement('a'); a.className = 'row'; a.href = '#' + e.id;
+    const th = e.thumb ? Object.assign(document.createElement('img'), { src: e.thumb, alt: '', className: 'thumb', loading: 'lazy' }) : Object.assign(document.createElement('div'), { className: 'thumb', innerHTML: DOC });
+    const mid = document.createElement('div'); mid.style.minWidth = 0;
+    const tg = Object.assign(document.createElement('div'), { className: 'tag', textContent: e.tag });
+    const nm = Object.assign(document.createElement('div'), { className: 'name', textContent: e.title });
+    const dt = Object.assign(document.createElement('div'), { className: 'date', textContent: e.date });
+    mid.append(tg, nm, dt);
+    const ch = document.createElement('span'); ch.innerHTML = CHEV; ch.style.color = 'var(--ink-soft)';
+    a.append(th, mid, ch); rows.appendChild(a);
+  });
+}
+function showBook(b, animate) {
+  if (curBook === b) return;
+  fillBook(b); $('#page').scrollTop = 0;
+  if (!animate) bookEl.classList.add('noanim');
+  bookEl.inert = false; bookEl.classList.add('open'); curBook = b;
+  if (!animate) requestAnimationFrame(() => requestAnimationFrame(() => bookEl.classList.remove('noanim')));
+  else setTimeout(() => { if (curBook === b && !curEntry) $('#navBack').focus({ preventScroll: true }); }, reduce ? 50 : 700);
+}
+function hideBook() {
+  if (!curBook) return;
+  bookEl.classList.remove('open'); bookEl.inert = true; curBook = null;
+}
+
+/* ============ READER + ZOOM ============ */
+const vp = $('#viewer'), img = $('#vimg'), hint = $('#hint');
+const V = { s: 1, x: 0, y: 0, nw: 1, nh: 1, cw: 0, ch: 0, fit: 1, max: 8, ptr: new Map(), pd: 0, pc: null, tap: null, hintTimer: 0 };
+function vClamp() {
+  const w = V.nw * V.s, h = V.nh * V.s;
+  V.x = w <= V.cw ? (V.cw - w) / 2 : Math.min(0, Math.max(V.cw - w, V.x));
+  V.y = h <= V.ch ? (V.ch - h) / 2 : Math.min(0, Math.max(V.ch - h, V.y));
+}
+function vApply() { img.style.transform = 'translate(' + V.x + 'px,' + V.y + 'px) scale(' + V.s + ')'; }
+function vLayout(reset) {
+  V.cw = vp.clientWidth; V.ch = vp.clientHeight;
+  if (!V.cw || !V.ch) return;
+  const wasFit = Math.abs(V.s - V.fit) < 1e-4;
+  V.fit = Math.min(V.cw / V.nw, V.ch / V.nh); V.max = Math.max(V.fit * 8, 2);
+  if (reset || wasFit) V.s = V.fit;
+  V.s = Math.min(V.max, Math.max(V.fit, V.s));
+  vClamp(); vApply();
+}
+function vZoom(px, py, ns) {
+  ns = Math.min(V.max, Math.max(V.fit, ns));
+  const r = ns / V.s; V.x = px - (px - V.x) * r; V.y = py - (py - V.y) * r; V.s = ns;
+  vClamp(); vApply();
+}
+vp.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('.zoom')) return;
+  try { vp.setPointerCapture(e.pointerId); } catch (_) {}
+  V.ptr.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now() });
+  if (V.ptr.size === 2) { const [a, b] = [...V.ptr.values()]; V.pd = Math.hypot(a.x - b.x, a.y - b.y); V.pc = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
+  hint.classList.add('gone');
+});
+vp.addEventListener('pointermove', (e) => {
+  const p = V.ptr.get(e.pointerId); if (!p) return;
+  const ox = p.x, oy = p.y; p.x = e.clientX; p.y = e.clientY;
+  if (V.ptr.size === 1) { V.x += p.x - ox; V.y += p.y - oy; vClamp(); vApply(); }
+  else if (V.ptr.size === 2) {
+    const [a, b] = [...V.ptr.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y), c = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const r = vp.getBoundingClientRect();
+    if (V.pd > 0) vZoom(V.pc.x - r.left, V.pc.y - r.top, V.s * d / V.pd);
+    V.x += c.x - V.pc.x; V.y += c.y - V.pc.y; vClamp(); vApply();
+    V.pd = d; V.pc = c;
+  }
+});
+function vEnd(e) {
+  const p = V.ptr.get(e.pointerId); if (!p) return;
+  V.ptr.delete(e.pointerId);
+  const now = performance.now();
+  if (e.type === 'pointerup' && V.ptr.size === 0 && Math.hypot(e.clientX - p.sx, e.clientY - p.sy) < 8 && now - p.t < 300) {
+    if (V.tap && now - V.tap.t < 320 && Math.hypot(e.clientX - V.tap.x, e.clientY - V.tap.y) < 30) {
+      const r = vp.getBoundingClientRect();
+      vZoom(e.clientX - r.left, e.clientY - r.top, V.s > V.fit * 1.5 ? V.fit : V.fit * 3);
+      V.tap = null;
+    } else V.tap = { t: now, x: e.clientX, y: e.clientY };
+  }
+}
+vp.addEventListener('pointerup', vEnd); vp.addEventListener('pointercancel', vEnd);
+vp.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const r = vp.getBoundingClientRect();
+  vZoom(e.clientX - r.left, e.clientY - r.top, V.s * Math.exp(-e.deltaY * 0.0015));
+}, { passive: false });
+$('#zIn').addEventListener('click', () => vZoom(V.cw / 2, V.ch / 2, V.s * 1.6));
+$('#zOut').addEventListener('click', () => vZoom(V.cw / 2, V.ch / 2, V.s / 1.6));
+$('#zFit').addEventListener('click', () => vZoom(V.cw / 2, V.ch / 2, V.fit));
+addEventListener('resize', () => { if (curEntry && curEntry.kind === 'image') vLayout(false); });
+
+function showEntry(e, b, animate) {
+  if (curEntry === e) return;
+  $('#rTitle').textContent = e.title;
+  readerEl.classList.toggle('is-image', e.kind === 'image');
+  readerEl.classList.toggle('is-text', e.kind !== 'image');
+  if (e.kind === 'image') {
+    vp.classList.remove('ready'); V.nw = e.w; V.nh = e.h; V.s = 1; V.fit = 1; V.ptr.clear(); V.tap = null;
+    img.alt = e.alt || e.title; img.style.width = e.w + 'px'; img.style.height = e.h + 'px';
+    img.onload = () => { vp.classList.add('ready'); };
+    img.src = e.src;
+    hint.textContent = e.hint || 'Pinch to zoom, drag to pan.';
+    hint.classList.remove('gone'); clearTimeout(V.hintTimer); V.hintTimer = setTimeout(() => hint.classList.add('gone'), 6000);
+  } else {
+    const inn = $('#rtextIn'); inn.textContent = '';
+    const t = Object.assign(document.createElement('div'), { className: 'tag', textContent: e.tag });
+    const h = Object.assign(document.createElement('h2'), { textContent: e.title });
+    inn.append(t, h);
+    (e.body || []).forEach((s) => inn.appendChild(Object.assign(document.createElement('p'), { textContent: s })));
+    $('#rtext').scrollTop = 0;
+  }
+  if (!animate) readerEl.classList.add('noanim');
+  readerEl.inert = false; readerEl.classList.add('open'); curEntry = e;
+  if (e.kind === 'image') vLayout(true);
+  if (!animate) requestAnimationFrame(() => requestAnimationFrame(() => readerEl.classList.remove('noanim')));
+  setTimeout(() => { if (curEntry === e) $('#navBack').focus({ preventScroll: true }); }, 360);
+}
+function hideEntry() {
+  if (!curEntry) return;
+  readerEl.classList.remove('open'); readerEl.inert = true; curEntry = null; V.ptr.clear();
+}
+
+/* ============ ROUTING (hash: #book-id or #entry-id) ============ */
+function curHash() { try { return decodeURIComponent(location.hash.slice(1)); } catch (_) { return ''; } }
+function findEntry(id) {
+  for (const b of BOOKS) for (const e of live(b)) if (e.id === id) return { b, e };
+  return null;
+}
+function route(first) {
+  const id = curHash(), hit = findEntry(id);
+  const book = hit ? hit.b : BOOKS.find((b) => b.id === id);
+  if (book) showBook(book, !first); else hideBook();
+  if (hit) showEntry(hit.e, hit.b, !first); else hideEntry();
+  updateNav();
+}
+function updateNav() {
+  $('#nav').hidden = !(curBook || curEntry);
+  $('#navShelf').hidden = !curEntry;
+}
+let trail = [curHash()];
+addEventListener('hashchange', () => {
+  const h = curHash(), i = trail.lastIndexOf(h);
+  if (i >= 0) trail.length = i + 1; else trail.push(h);
+  route(false);
+});
+function goBack() {
+  const hit = findEntry(curHash());
+  const parent = hit ? hit.b.id : '';
+  trail = [parent];
+  try { location.replace('#' + parent); } catch (_) { location.hash = parent; }
+  route(false);
+}
+function goShelf() {
+  trail = [''];
+  try { location.replace('#'); } catch (_) { location.hash = ''; }
+  route(false);
+}
+$('#navBack').addEventListener('click', goBack);
+$('#navShelf').addEventListener('click', goShelf);
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && (curBook || curEntry)) goBack(); });
+route(true);
+</script>
+</body>
+</html>
