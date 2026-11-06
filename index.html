@@ -164,16 +164,18 @@ h1.title { font-family: var(--f-display); font-weight: 600; font-size: 38px; lin
 .viewer.ready img { opacity: 1; }
 .loading { position: absolute; inset: 0; display: grid; place-items: center; font-style: italic; color: #a39478; pointer-events: none; }
 .viewer.ready .loading { display: none; }
-.zoom { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); bottom: 14px; display: flex; flex-direction: column; gap: 8px; }
+.rtools { display: flex; align-items: center; gap: 12px; background: #120c08; border-top: 1px solid rgba(201,162,77,.3); padding: 8px max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px)); }
+.reader.is-text .rtools { display: none; }
+.zoom { display: flex; gap: 8px; margin-left: auto; }
 .zoom button { width: 46px; height: 46px; background: rgba(18,12,8,.88); border: 1px solid var(--brass-dim); color: var(--brass); font-family: var(--f-display); font-size: 20px; line-height: 1; cursor: pointer; border-radius: 2px; }
 .zoom button.fitb { font-size: 11px; letter-spacing: .08em; }
 .hint { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 12px; max-width: calc(100% - 24px); background: rgba(18,12,8,.88); border: 1px solid rgba(201,162,77,.35); padding: 8px 12px; font-size: 15px; font-style: italic; color: #d8c9a6; transition: opacity .6s ease; pointer-events: none; }
 .hint.gone { opacity: 0; }
-.pager { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; background: rgba(18,12,8,.88); border: 1px solid var(--brass-dim); border-radius: 2px; }
+.pager { display: flex; align-items: center; gap: 2px; background: rgba(0,0,0,.25); border: 1px solid var(--brass-dim); border-radius: 2px; }
 .pager[hidden] { display: none; }
 .pager button { width: 46px; height: 46px; background: none; border: 0; color: var(--brass); font-family: var(--f-display); font-size: 28px; line-height: 1; cursor: pointer; }
 .pager button:disabled { opacity: .3; cursor: default; }
-.pager span { min-width: 56px; text-align: center; font-family: var(--f-display); font-size: 13px; letter-spacing: .1em; color: var(--vellum); font-variant-numeric: tabular-nums; }
+.pager span { min-width: 52px; text-align: center; font-family: var(--f-display); font-size: 13px; letter-spacing: .1em; color: var(--vellum); font-variant-numeric: tabular-nums; }
 .rtext { flex: 1; min-height: 0; overflow-y: auto; background: var(--vellum); color: var(--ink); padding: 28px max(22px, env(safe-area-inset-right, 0px)) 40px max(22px, env(safe-area-inset-left, 0px)); }
 .rtext-in { max-width: 36rem; margin: 0 auto; }
 .rtext h2 { font-family: var(--f-display); font-weight: 600; font-size: 30px; line-height: 1.15; letter-spacing: .05em; margin: 6px 0 14px; text-wrap: balance; }
@@ -236,6 +238,8 @@ h1.title { font-family: var(--f-display); font-weight: 600; font-size: 38px; lin
     <img id="vimg" alt="" draggable="false">
     <div class="loading">Unrolling the map&hellip;</div>
     <div class="hint" id="hint"></div>
+  </div>
+  <div class="rtools" id="rtools">
     <div class="pager" id="pager" hidden>
       <button type="button" id="pPrev" aria-label="Previous page">&lsaquo;</button>
       <span id="pCount" aria-live="polite">1 / 1</span>
