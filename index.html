@@ -167,8 +167,13 @@ h1.title { font-family: var(--f-display); font-weight: 600; font-size: 38px; lin
 .zoom { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); bottom: 14px; display: flex; flex-direction: column; gap: 8px; }
 .zoom button { width: 46px; height: 46px; background: rgba(18,12,8,.88); border: 1px solid var(--brass-dim); color: var(--brass); font-family: var(--f-display); font-size: 20px; line-height: 1; cursor: pointer; border-radius: 2px; }
 .zoom button.fitb { font-size: 11px; letter-spacing: .08em; }
-.hint { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); bottom: 14px; max-width: calc(100% - 92px); background: rgba(18,12,8,.88); border: 1px solid rgba(201,162,77,.35); padding: 8px 12px; font-size: 15px; font-style: italic; color: #d8c9a6; transition: opacity .6s ease; pointer-events: none; }
+.hint { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 12px; max-width: calc(100% - 24px); background: rgba(18,12,8,.88); border: 1px solid rgba(201,162,77,.35); padding: 8px 12px; font-size: 15px; font-style: italic; color: #d8c9a6; transition: opacity .6s ease; pointer-events: none; }
 .hint.gone { opacity: 0; }
+.pager { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; background: rgba(18,12,8,.88); border: 1px solid var(--brass-dim); border-radius: 2px; }
+.pager[hidden] { display: none; }
+.pager button { width: 46px; height: 46px; background: none; border: 0; color: var(--brass); font-family: var(--f-display); font-size: 28px; line-height: 1; cursor: pointer; }
+.pager button:disabled { opacity: .3; cursor: default; }
+.pager span { min-width: 56px; text-align: center; font-family: var(--f-display); font-size: 13px; letter-spacing: .1em; color: var(--vellum); font-variant-numeric: tabular-nums; }
 .rtext { flex: 1; min-height: 0; overflow-y: auto; background: var(--vellum); color: var(--ink); padding: 28px max(22px, env(safe-area-inset-right, 0px)) 40px max(22px, env(safe-area-inset-left, 0px)); }
 .rtext-in { max-width: 36rem; margin: 0 auto; }
 .rtext h2 { font-family: var(--f-display); font-weight: 600; font-size: 30px; line-height: 1.15; letter-spacing: .05em; margin: 6px 0 14px; text-wrap: balance; }
@@ -231,6 +236,11 @@ h1.title { font-family: var(--f-display); font-weight: 600; font-size: 38px; lin
     <img id="vimg" alt="" draggable="false">
     <div class="loading">Unrolling the map&hellip;</div>
     <div class="hint" id="hint"></div>
+    <div class="pager" id="pager" hidden>
+      <button type="button" id="pPrev" aria-label="Previous page">&lsaquo;</button>
+      <span id="pCount" aria-live="polite">1 / 1</span>
+      <button type="button" id="pNext" aria-label="Next page">&rsaquo;</button>
+    </div>
     <div class="zoom">
       <button type="button" id="zIn" aria-label="Zoom in">+</button>
       <button type="button" id="zOut" aria-label="Zoom out">&minus;</button>
@@ -248,21 +258,24 @@ h1.title { font-family: var(--f-display); font-weight: 600; font-size: 38px; lin
 <script>
 /* ============ CONTENT: edit this list to add books and entries ============
    revealed: false hides an entry until you flip it to true (or delete the flag).
-   kind 'image' opens a pinch-zoom viewer (give w and h in pixels); kind 'text' opens a page. */
+   kind 'image' opens a pinch-zoom viewer (give w and h in pixels). Use src for one image, or pages: [...] for several
+   images of the same size (swipe or use the arrows to turn them). kind 'text' opens a page. */
 const BOOKS = [
   { id: 'maps', title: 'Maps', color: 'var(--moss)', unit: ['map', 'maps'],
     blurb: 'Charts of Sigil and the places the party has been.',
     entries: [
       { id: 'sigil-map', title: 'Sigil, City of Doors', tag: 'City', date: 'Nov 1, 2026', kind: 'image',
-        src: 'sigil.jpg', thumb: 'thumb-sigil.jpg', w: 4200, h: 716,
+        src: 'img/sigil.webp', thumb: 'img/sigil-thumb.webp', w: 4200, h: 716,
         alt: 'Wide illustrated panorama map of Sigil, the City of Doors, with landmarks along its length.',
         hint: 'Pinch to zoom, drag to pan. Turn your phone sideways to see more at once.' }
     ] },
   { id: 'sigis', title: 'S.I.G.I.S.', color: 'var(--oxblood)', unit: ['issue', 'issues'],
     blurb: 'Back issues of the city newsletter.',
     entries: [
-      { id: 'sigis-example', title: 'Example issue', tag: 'Placeholder', date: 'Nov 1, 2026', kind: 'text',
-        body: ['This is an example entry. Replace it with a real issue of S.I.G.I.S. in the content list at the top of this page’s script.'] }
+      { id: 'sigis-358', title: 'Issue 358', tag: 'S.I.G.I.S.', date: 'Third Week, Nihilum', kind: 'image',
+        pages: ['img/sigis-358-1.webp', 'img/sigis-358-2.webp'], thumb: 'img/sigis-358-thumb.webp', w: 2202, h: 2849,
+        alt: 'S.I.G.I.S. Issue 358',
+        hint: 'Swipe left or right to turn the page. Pinch to zoom, drag to pan.' }
     ] },
   { id: 'lore', title: 'Lore', color: 'var(--indigo)', unit: ['entry', 'entries'],
     blurb: 'What the party has learned about the planes and the people in them.',
@@ -330,7 +343,7 @@ function fillBook(b) {
     const mid = document.createElement('div'); mid.style.minWidth = 0;
     const tg = Object.assign(document.createElement('div'), { className: 'tag', textContent: e.tag });
     const nm = Object.assign(document.createElement('div'), { className: 'name', textContent: e.title });
-    const dt = Object.assign(document.createElement('div'), { className: 'date', textContent: e.date });
+    const dt = Object.assign(document.createElement('div'), { className: 'date', textContent: e.date + (e.pages && e.pages.length > 1 ? ' · ' + e.pages.length + ' pages' : '') });
     mid.append(tg, nm, dt);
     const ch = document.createElement('span'); ch.innerHTML = CHEV; ch.style.color = 'var(--ink-soft)';
     a.append(th, mid, ch); rows.appendChild(a);
@@ -351,7 +364,23 @@ function hideBook() {
 
 /* ============ READER + ZOOM ============ */
 const vp = $('#viewer'), img = $('#vimg'), hint = $('#hint');
-const V = { s: 1, x: 0, y: 0, nw: 1, nh: 1, cw: 0, ch: 0, fit: 1, max: 8, ptr: new Map(), pd: 0, pc: null, tap: null, hintTimer: 0 };
+const V = { s: 1, x: 0, y: 0, nw: 1, nh: 1, cw: 0, ch: 0, fit: 1, max: 8, ptr: new Map(), pd: 0, pc: null, tap: null, hintTimer: 0, pages: [''], pi: 0, alt: '', multi: false };
+const pager = $('#pager');
+function loadPage() {
+  vp.classList.remove('ready');
+  const n = V.pages.length;
+  img.alt = V.alt + (n > 1 ? ', page ' + (V.pi + 1) + ' of ' + n : '');
+  img.src = V.pages[V.pi];
+  V.s = 1; vLayout(true);
+  $('#pCount').textContent = (V.pi + 1) + ' / ' + n;
+  $('#pPrev').disabled = V.pi === 0; $('#pNext').disabled = V.pi === n - 1;
+  if (V.pi + 1 < n) new Image().src = V.pages[V.pi + 1];
+}
+function turn(d) {
+  const i = V.pi + d;
+  if (i < 0 || i >= V.pages.length) return;
+  V.pi = i; hint.classList.add('gone'); loadPage();
+}
 function vClamp() {
   const w = V.nw * V.s, h = V.nh * V.s;
   V.x = w <= V.cw ? (V.cw - w) / 2 : Math.min(0, Math.max(V.cw - w, V.x));
@@ -373,10 +402,11 @@ function vZoom(px, py, ns) {
   vClamp(); vApply();
 }
 vp.addEventListener('pointerdown', (e) => {
-  if (e.target.closest('.zoom')) return;
+  if (e.target.closest('.zoom, .pager')) return;
   try { vp.setPointerCapture(e.pointerId); } catch (_) {}
   V.ptr.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now() });
-  if (V.ptr.size === 2) { const [a, b] = [...V.ptr.values()]; V.pd = Math.hypot(a.x - b.x, a.y - b.y); V.pc = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
+  if (V.ptr.size === 1) V.multi = false;
+  if (V.ptr.size === 2) { V.multi = true; const [a, b] = [...V.ptr.values()]; V.pd = Math.hypot(a.x - b.x, a.y - b.y); V.pc = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
   hint.classList.add('gone');
 });
 vp.addEventListener('pointermove', (e) => {
@@ -396,7 +426,11 @@ function vEnd(e) {
   const p = V.ptr.get(e.pointerId); if (!p) return;
   V.ptr.delete(e.pointerId);
   const now = performance.now();
-  if (e.type === 'pointerup' && V.ptr.size === 0 && Math.hypot(e.clientX - p.sx, e.clientY - p.sy) < 8 && now - p.t < 300) {
+  if (e.type === 'pointerup' && V.ptr.size === 0 && !V.multi && V.pages.length > 1 && V.s <= V.fit * 1.05) {
+    const dx = e.clientX - p.sx, dy = e.clientY - p.sy;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy) && now - p.t < 700) { turn(dx < 0 ? 1 : -1); return; }
+  }
+  if (e.type === 'pointerup' && V.ptr.size === 0 && !V.multi && Math.hypot(e.clientX - p.sx, e.clientY - p.sy) < 8 && now - p.t < 300) {
     if (V.tap && now - V.tap.t < 320 && Math.hypot(e.clientX - V.tap.x, e.clientY - V.tap.y) < 30) {
       const r = vp.getBoundingClientRect();
       vZoom(e.clientX - r.left, e.clientY - r.top, V.s > V.fit * 1.5 ? V.fit : V.fit * 3);
@@ -413,6 +447,8 @@ vp.addEventListener('wheel', (e) => {
 $('#zIn').addEventListener('click', () => vZoom(V.cw / 2, V.ch / 2, V.s * 1.6));
 $('#zOut').addEventListener('click', () => vZoom(V.cw / 2, V.ch / 2, V.s / 1.6));
 $('#zFit').addEventListener('click', () => vZoom(V.cw / 2, V.ch / 2, V.fit));
+$('#pPrev').addEventListener('click', () => turn(-1));
+$('#pNext').addEventListener('click', () => turn(1));
 addEventListener('resize', () => { if (curEntry && curEntry.kind === 'image') vLayout(false); });
 
 function showEntry(e, b, animate) {
@@ -421,10 +457,12 @@ function showEntry(e, b, animate) {
   readerEl.classList.toggle('is-image', e.kind === 'image');
   readerEl.classList.toggle('is-text', e.kind !== 'image');
   if (e.kind === 'image') {
-    vp.classList.remove('ready'); V.nw = e.w; V.nh = e.h; V.s = 1; V.fit = 1; V.ptr.clear(); V.tap = null;
-    img.alt = e.alt || e.title; img.style.width = e.w + 'px'; img.style.height = e.h + 'px';
+    V.pages = e.pages || [e.src]; V.pi = 0; V.alt = e.alt || e.title;
+    V.nw = e.w; V.nh = e.h; V.s = 1; V.fit = 1; V.ptr.clear(); V.tap = null; V.multi = false;
+    img.style.width = e.w + 'px'; img.style.height = e.h + 'px';
     img.onload = () => { vp.classList.add('ready'); };
-    img.src = e.src;
+    pager.hidden = V.pages.length < 2;
+    loadPage();
     hint.textContent = e.hint || 'Pinch to zoom, drag to pan.';
     hint.classList.remove('gone'); clearTimeout(V.hintTimer); V.hintTimer = setTimeout(() => hint.classList.add('gone'), 6000);
   } else {
@@ -483,7 +521,11 @@ function goShelf() {
 }
 $('#navBack').addEventListener('click', goBack);
 $('#navShelf').addEventListener('click', goShelf);
-addEventListener('keydown', (e) => { if (e.key === 'Escape' && (curBook || curEntry)) goBack(); });
+addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && (curBook || curEntry)) goBack();
+  else if (curEntry && curEntry.kind === 'image' && e.key === 'ArrowRight') turn(1);
+  else if (curEntry && curEntry.kind === 'image' && e.key === 'ArrowLeft') turn(-1);
+});
 route(true);
 </script>
 </body>
