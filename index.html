@@ -262,12 +262,30 @@ h1.title { font-family: var(--f-display); font-weight: 600; font-size: 38px; lin
 /* ============ CONTENT: edit this list to add books and entries ============
    revealed: false hides an entry until you flip it to true (or delete the flag).
    kind 'image' opens a pinch-zoom viewer (give w and h in pixels). Use src for one image, or pages: [...] for several
-   images of the same size (swipe or use the arrows to turn them). kind 'text' opens a page.
+   images (swipe or use the arrows to turn them). Images do NOT need to match in size: a page is either a path string
+   (uses the entry's w and h) or { src, w, h, alt } with its own size. Give the entry w and h of its first page.
+   kind 'text' opens a page.
    Newest first: add each new entry at the top of its book's entries list. */
 const BOOKS = [
   { id: 'maps', title: 'Maps', color: 'var(--moss)', unit: ['map', 'maps'],
     blurb: 'Charts of Sigil and the places the party has been.',
     entries: [
+      { id: 'castle-plan', title: 'The Castle, Floor Plan', tag: 'Bastion', date: 'Nov 7, 2026', kind: 'image', revealed: false,
+        pages: [
+          { src: 'img/castle-plan.webp', w: 3300, h: 2550, alt: 'Floor plans of the castle keep and its two towers, with rooms, stairs, doors, windows and sizes labeled' },
+          { src: 'img/castle.webp', w: 1536, h: 1024, alt: 'Three views of the stone and timber castle on a hillside above a mountain valley' }
+        ],
+        thumb: 'img/castle-plan-thumb.webp', w: 3300, h: 2550,
+        alt: 'The castle',
+        hint: 'Swipe left or right to turn the page. Pinch to zoom, drag to pan.' },
+      { id: 'new-haven-map', title: 'New Haven', tag: 'Town', date: 'Nov 7, 2026', kind: 'image', revealed: false,
+        pages: [
+          { src: 'img/new-haven.webp', w: 1254, h: 1254, alt: 'Illustrated map of the valley town of New Haven, with a road leading east to the castle and portal' },
+          { src: 'img/new-haven-view.webp', w: 1672, h: 941, alt: 'A mountain valley with a river, waterfalls and a small timber-framed town on its banks' }
+        ],
+        thumb: 'img/new-haven-thumb.webp', w: 1254, h: 1254,
+        alt: 'New Haven',
+        hint: 'Swipe left or right to turn the page. Pinch to zoom, drag to pan.' },
       { id: 'sigil-map', title: 'Sigil, City of Doors', tag: 'City', date: 'Nov 1, 2026', kind: 'image',
         src: 'img/sigil.webp', thumb: 'img/sigil-thumb.webp', w: 4200, h: 716,
         alt: 'Wide illustrated panorama map of Sigil, the City of Doors, with landmarks along its length.',
@@ -368,17 +386,22 @@ function hideBook() {
 
 /* ============ READER + ZOOM ============ */
 const vp = $('#viewer'), img = $('#vimg'), hint = $('#hint');
-const V = { s: 1, x: 0, y: 0, nw: 1, nh: 1, cw: 0, ch: 0, fit: 1, max: 8, ptr: new Map(), pd: 0, pc: null, tap: null, hintTimer: 0, pages: [''], pi: 0, alt: '', multi: false };
+const V = { w0: 1, h0: 1, s: 1, x: 0, y: 0, nw: 1, nh: 1, cw: 0, ch: 0, fit: 1, max: 8, ptr: new Map(), pd: 0, pc: null, tap: null, hintTimer: 0, pages: [''], pi: 0, alt: '', multi: false };
 const pager = $('#pager');
+function pgInfo(i) {
+  const p = V.pages[i];
+  return typeof p === 'string' ? { src: p, w: V.w0, h: V.h0, alt: V.alt } : { src: p.src, w: p.w || V.w0, h: p.h || V.h0, alt: p.alt || V.alt };
+}
 function loadPage() {
   vp.classList.remove('ready');
-  const n = V.pages.length;
-  img.alt = V.alt + (n > 1 ? ', page ' + (V.pi + 1) + ' of ' + n : '');
-  img.src = V.pages[V.pi];
+  const n = V.pages.length, q = pgInfo(V.pi);
+  V.nw = q.w; V.nh = q.h; img.style.width = q.w + 'px'; img.style.height = q.h + 'px';
+  img.alt = q.alt + (n > 1 ? ', page ' + (V.pi + 1) + ' of ' + n : '');
+  img.src = q.src;
   V.s = 1; vLayout(true);
   $('#pCount').textContent = (V.pi + 1) + ' / ' + n;
   $('#pPrev').disabled = V.pi === 0; $('#pNext').disabled = V.pi === n - 1;
-  if (V.pi + 1 < n) new Image().src = V.pages[V.pi + 1];
+  if (V.pi + 1 < n) new Image().src = pgInfo(V.pi + 1).src;
 }
 function turn(d) {
   const i = V.pi + d;
@@ -461,7 +484,7 @@ function showEntry(e, b, animate) {
   readerEl.classList.toggle('is-image', e.kind === 'image');
   readerEl.classList.toggle('is-text', e.kind !== 'image');
   if (e.kind === 'image') {
-    V.pages = e.pages || [e.src]; V.pi = 0; V.alt = e.alt || e.title;
+    V.pages = e.pages || [e.src]; V.pi = 0; V.alt = e.alt || e.title; V.w0 = e.w; V.h0 = e.h;
     V.nw = e.w; V.nh = e.h; V.s = 1; V.fit = 1; V.ptr.clear(); V.tap = null; V.multi = false;
     img.style.width = e.w + 'px'; img.style.height = e.h + 'px';
     img.onload = () => { vp.classList.add('ready'); };
